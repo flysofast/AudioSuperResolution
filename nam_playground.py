@@ -5,7 +5,7 @@ from scipy import signal
 import numpy as np
 import matplotlib.pyplot as plt
 from keras.layers.convolutional import Conv2D, MaxPooling2D
-from keras.models import Sequential
+from keras.models import Sequential,load_model
 from keras.layers.core import Dense, Activation, Flatten
 from sklearn.model_selection import train_test_split
 from keras.optimizers import SGD, Adam
@@ -13,13 +13,15 @@ from keras.callbacks import ModelCheckpoint
 import h5py
 from pydub import AudioSegment
 import os
+import datetime
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 stereo_filepath = os.getcwd() + '/data/1.wav'
 mono_filepath = os.getcwd() + "/data_monowavs/1.wav"
 mp3_filepath = os.getcwd() + "/data_mp3/1.mp3"
 input_filepath = os.getcwd() + "/data_input/1.wav"
-#%% ----------Feature extraction-------------
+
+#Feature extraction
 def feature_extraction(x,fs):
 
 	frame_length_s = 0.04 # window length in seconds
@@ -44,47 +46,16 @@ def feature_extraction(x,fs):
 	# Transpose the feature to be in form (batch number x number of freqs x number of frames x 1)
 	return features.transpose((2,0,1,3))
 
-	# #%% --------Spectrogram--------------
-	# # The whole file spectrogram------------------
-	# to_be_plotted = trimmed_X
-		# duration = len(x)/float(fs)
-	# freq_scale = np.linspace(0, fs / 2, to_be_plotted.shape[0])
-	# timeframe_scale = np.linspace(0, duration, to_be_plotted.shape[1])
-
-	# # plot spectrogram (amplitude only)
-	# W = np.abs(to_be_plotted)
-	# plt.figure()
-	# plt.subplot(2,1,1)
-	# plt.pcolormesh(timeframe_scale, freq_scale, np.log(W+0.00001))
-	# plt.xlabel('Time (s)')
-	# plt.ylabel('Frequency (Hz)')
-	# plt.title('Entire file Spectrogram (log scale)')
-	# plt.tight_layout()
-
-	# # First batch spectrogram--------------
-	# freq_scale = np.linspace(0, fs / 2, number_frequencies)
-	# timeframe_scale = np.linspace(0, segment_length*frame_length_s, segment_length)
-	# # plot spectrogram (amplitude only)
-	# W = np.abs(features[50])
-	# plt.subplot(2,1,2)
-	# plt.pcolormesh(timeframe_scale, freq_scale, np.log(W+0.00001))
-	# plt.xlabel('Time (s)')
-	# plt.ylabel('Frequency (Hz)')
-	# plt.title('First batch spectrogram (log scale)')
-	# plt.tight_layout()
-	# plt.show()
-
-#%% -------Convert stereo wav to mono wav------------
-
+#Converts stereo wav to mono wav
 def file_process():
 	sound = AudioSegment.from_wav(stereo_filepath)
 	sound = sound.set_channels(1)
 	sound.export(mono_filepath, format="wav")
 
-#%%---Convert to mp3------
+#---Convert to mp3------
 # AudioSegment.from_wav(mono_filepath).export(mp3_filepath, format="mp3")
-#%%---------Test extract features-----------
 
+# Extracts and saves extracted features to hdf5 file
 def save_features():
 	x1, fs = sf.read(mono_filepath)
 	groundtruth_features = feature_extraction(x1,fs)
@@ -94,7 +65,6 @@ def save_features():
 
 	X_train,X_test,y_train,y_test = train_test_split(input_features,groundtruth_features,test_size=0.2,random_state=0)
 
-
 	with h5py.File('data.hdf5', 'w') as f:
 		f.create_dataset('X_train', data=X_train)
 		f.create_dataset('X_test', data=X_test)
@@ -103,7 +73,7 @@ def save_features():
 
 	return X_train,X_test,y_train,y_test
 
-#%% -----Read data-----------
+# Read extracted features from hdf5 file
 def read_features():
 	with h5py.File('data.hdf5', 'r') as f:
 			X_train = f.get('X_train').value
@@ -112,8 +82,7 @@ def read_features():
 			y_test = f.get('y_test').value
 	return X_train, y_train, X_test, y_test
 
-#%%---------CNN Model-------
-
+#---------CNN Model-------
 def get_model(features_shape):
 	N = 32 # Number of feature maps 
 	w, h = 3, 3 # Conv. window size
@@ -149,4 +118,13 @@ model = get_model(X_train.shape)
 model.fit(X_train, y_train, batch_size=32, validation_data=(X_test, y_test),
                    shuffle=True, epochs=50)
 
+
+model.save('test-{date:%Y-%m-%d %H:%M:%S}.txt'.format( date=datetime.datetime.now() ))
+
+#%% --------RECONSTRUCT THE FILE----
+model = load_model('test_my_model.h5')
+yhat = model.predict(X_test)
+
+# yhat
+mae = np.sum(np.absolute((yhat.astype("float") - y_test.astype("float"))))
 #%%
