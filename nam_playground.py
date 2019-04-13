@@ -21,8 +21,6 @@ stereo_filepath = os.getcwd() + '/data/1.wav'
 mono_filepath = os.getcwd() + "/data_monowavs/1.wav"
 mp3_filepath = os.getcwd() + "/data_mp3/1.mp3"
 input_filepath = os.getcwd() + "/data_input/1.wav"
-output_filepath = os.getcwd() + "/output/1.wav"
-
 #Feature extraction
 def feature_extraction(x,fs):
 
@@ -128,8 +126,12 @@ save_features(X_train,X_test,y_train,y_test)
 # model.save('test-{date:%Y-%m-%d %H:%M:%S}.txt'.format( date=datetime.datetime.now() ))
 
 #%% ----- PREDICT---------
+
 model = load_model('mae_model.h5')
-yhat = model.predict(X_test)
+
+y, fs = sf.read(os.getcwd() + '/data_monowavs/2.wav')
+feat = feature_extraction(y,fs)
+yhat = model.predict(feat)
 #%% ------RECONSTRUCT THE AUDIO--------
 
 # Restore to the original shape
@@ -137,6 +139,6 @@ yhat = yhat.transpose((1,2,0,3))
 yhat = yhat.reshape((yhat.shape[0],-1), order='F')
 # Save output file
 _, xrec = signal.istft(yhat, fs)
-write(output_filepath,fs,xrec)
+write(os.getcwd() + "/output/2.wav",fs,xrec)
 
 #%%
