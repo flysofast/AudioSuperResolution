@@ -31,12 +31,12 @@ def feature_extraction(x,fs):
 
 	# Compute STFT
 	_,_,X = signal.stft(x, nfft=frame_length,noverlap=hop_length, fs=fs,nperseg=frame_length)
-	number_frequencies, number_time_frames = X.shape
-	X = np.abs(X)
+	number_frequencies, number_time_frames = X.shape[0]//2 -1, X.shape[1]
+	X = np.abs(X[0:number_frequencies, :])
 
 	# Segmentation
 	segment_length_s = 0.5 # segment length in seconds
-	segment_length = int(2**np.ceil(np.log2(segment_length_s/frame_length_s))) # ~0.4s in samples
+	segment_length = int(2**np.ceil(np.log2(segment_length_s/frame_length_s))) # ~0.5s in samples
 
 	# Trim the frames that can't be fitted into the segment size
 	trimmed_X = X[:, :-(number_time_frames%segment_length)]
@@ -58,7 +58,7 @@ def file_process():
 # Extracts and saves extracted features to hdf5 file
 def save_features(X_train,X_test,y_train,y_test):
 	
-	with h5py.File('data.hdf5', 'w') as f:
+	with h5py.File('features.hdf5', 'w') as f:
 		f.create_dataset('X_train', data=X_train)
 		f.create_dataset('X_test', data=X_test)
 		f.create_dataset('y_train', data=y_train)
@@ -66,7 +66,7 @@ def save_features(X_train,X_test,y_train,y_test):
 
 # Read extracted features from hdf5 file
 def read_features():
-	with h5py.File('data.hdf5', 'r') as f:
+	with h5py.File('features.hdf5', 'r') as f:
 			X_train = f.get('X_train').value
 			X_test = f.get('X_test').value
 			y_train = f.get('y_train').value
@@ -129,7 +129,7 @@ save_features(X_train,X_test,y_train,y_test)
 
 model = load_model('mae_model.h5')
 
-y, fs = sf.read(os.getcwd() + '/data_monowavs/2.wav')
+y, fs = sf.read(os.getcwd() + '/data_monowavs/1.wav')
 feat = feature_extraction(y,fs)
 yhat = model.predict(feat)
 #%% ------RECONSTRUCT THE AUDIO--------
@@ -137,6 +137,7 @@ yhat = model.predict(feat)
 # Restore to the original shape
 yhat = yhat.transpose((1,2,0,3))
 yhat = yhat.reshape((yhat.shape[0],-1), order='F')
+yhat = np.vstack((yhat,np.flipud(yhat)))
 # Save output file
 _, xrec = signal.istft(yhat, fs)
 write(os.getcwd() + "/output/2.wav",fs,xrec)
