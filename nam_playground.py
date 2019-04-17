@@ -25,26 +25,28 @@ input_filepath = os.getcwd() + "/data_input/1.wav"
 def feature_extraction(x,fs):
 
 	frame_length_s = 0.04 # window length in seconds
-	frame_length = int(2**np.ceil(np.log2(fs*frame_length_s))) # 40ms window length in samples
+	frame_length = int(fs*frame_length_s) # 40ms window length in samples
 	# set an overlap ratio of 50 %
 	hop_length = frame_length//2
 
 	# Compute STFT
 	_,_,X = signal.stft(x, nfft=frame_length,noverlap=hop_length, fs=fs,nperseg=frame_length)
-	number_frequencies, number_time_frames = X.shape[0]//2 -1, X.shape[1]
-	X = np.abs(X[0:number_frequencies, :])
+	number_frequencies, number_time_frames = X.shape
+	phaseInfo = np.angle(X)
+	X = np.abs(X)
 
 	# Segmentation
-	segment_length_s = 0.5 # segment length in seconds
-	segment_length = int(2**np.ceil(np.log2(segment_length_s/frame_length_s))) # ~0.5s in samples
+	sample_length_s = 1 # segment length in seconds
+	sample_length = int(sample_length_s/frame_length_s) # ~1s in samples
 
 	# Trim the frames that can't be fitted into the segment size
-	trimmed_X = X[:, :-(number_time_frames%segment_length)]
+	trimmed_X = X[:, :-(number_time_frames%sample_length)]
+	trimmed_phaseInfo = phaseInfo[:, :-(number_time_frames%sample_length)]
 
 	# Segmentation (number of freqs x number of frames x number of segment x 1). The last dimension is 'channel'.
-	features = trimmed_X.reshape((number_frequencies,segment_length,-1,1), order='F')
+	features = trimmed_X.reshape((number_frequencies,sample_length,-1,1), order='F')
 	# Transpose the feature to be in form (number of segment x number of freqs x number of frames x 1)
-	return features.transpose((2,0,1,3))
+	return trimmed_phaseInfo,features.transpose((2,0,1,3))
 
 #Converts stereo wav to mono wav
 def file_process():
@@ -103,14 +105,14 @@ def get_model(features_shape):
 # X_train, y_train, X_test, y_test = read_features()
 
 # Extract features manually
-x1, fs = sf.read(mono_filepath)
-groundtruth_features = feature_extraction(x1,fs)
+# x1, fs = sf.read(mono_filepath)
+# _,groundtruth_features = feature_extraction(x1,fs)
 
-x2, fs = sf.read(input_filepath)
-input_features = feature_extraction(x2,fs)
+# x2, fs = sf.read(input_filepath)
+# _ ,input_features = feature_extraction(x2,fs)
 
-X_train,X_test,y_train,y_test = train_test_split(input_features,groundtruth_features,test_size=0.2,random_state=0)
-save_features(X_train,X_test,y_train,y_test)
+# X_train,X_test,y_train,y_test = train_test_split(input_features,groundtruth_features,test_size=0.2,random_state=0)
+# save_features(X_train,X_test,y_train,y_test)
 
 
 #%% ------ Fit model
@@ -127,19 +129,21 @@ save_features(X_train,X_test,y_train,y_test)
 
 #%% ----- PREDICT---------
 
-model = load_model('mae_model.h5')
+model = load_model('test-2019-04-17 16_59_54.h5')
 
 y, fs = sf.read(os.getcwd() + '/data_monowavs/1.wav')
-feat = feature_extraction(y,fs)
+phaseInfo,feat = feature_extraction(y,fs)
 yhat = model.predict(feat)
 #%% ------RECONSTRUCT THE AUDIO--------
 
 # Restore to the original shape
-yhat = yhat.transpose((1,2,0,3))
-yhat = yhat.reshape((yhat.shape[0],-1), order='F')
-yhat = np.vstack((yhat,np.flipud(yhat)))
+yrec = yhat.transpose((1,2,0,3))
+yrec = yrec.reshape((yrec.shape[0],-1), order='F')
+yrec = yrec + phaseInfo
+yrec = np.vstack((yrec,np.flipud(yrec)))
 # Save output file
-_, xrec = signal.istft(yhat, fs)
-write(os.getcwd() + "/output/2.wav",fs,xrec)
 
+_, xrec = signal.istft(yrec, fs)
+write(os.getcwd() + "/output/2_1.wav",fs,xrec)
+print('Output saved.')
 #%%
