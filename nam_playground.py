@@ -140,7 +140,7 @@ yhat = model.predict(feat)
 yrec = yhat.transpose((1,2,0,3))
 yrec = yrec.reshape((yrec.shape[0],-1), order='F')
 yrec = yrec + phaseInfo
-yrec = np.vstack((yrec,np.flipud(yrec)))
+# yrec = np.vstack((yrec,np.flipud(yrec)))
 # Save output file
 
 _, xrec = signal.istft(yrec, fs)
