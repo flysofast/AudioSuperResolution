@@ -18,9 +18,13 @@ from scipy.io.wavfile import write
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 stereo_filepath = os.getcwd() + '/data/1.wav'
-mono_filepath = os.getcwd() + "/data_monowavs/1.wav"
+mono_filepath = os.getcwd() +"/data_monowavs/1.wav"
 mp3_filepath = os.getcwd() + "/data_mp3/1.mp3"
 input_filepath = os.getcwd() + "/data_input/1.wav"
+
+input_folder = os.path.join(os.getcwd(), 'data_input')
+mono_folder = os.path.join(os.getcwd(), 'data_monowavs')
+stereo_folder = os.path.join(os.getcwd(), 'data')
 #Feature extraction
 def feature_extraction(x,fs):
 
@@ -30,7 +34,7 @@ def feature_extraction(x,fs):
 	hop_length = frame_length//2
 
 	# Compute STFT
-	_,_,X = signal.stft(x, nfft=frame_length,noverlap=hop_length, fs=fs,nperseg=frame_length)
+	_,_,X = signal.stft(x, noverlap=hop_length, fs=fs,nperseg=frame_length)
 	number_frequencies, number_time_frames = X.shape
 	phaseInfo = np.angle(X)
 	X = np.abs(X)
@@ -49,10 +53,11 @@ def feature_extraction(x,fs):
 	return trimmed_phaseInfo,features.transpose((2,0,1,3))
 
 #Converts stereo wav to mono wav
-def file_process():
-	sound = AudioSegment.from_wav(stereo_filepath)
+def file_process(file_path):
+	_, filename = os.path.split(file_path)
+	sound = AudioSegment.from_wav(file_path)
 	sound = sound.set_channels(1)
-	sound.export(mono_filepath, format="wav")
+	sound.export(os.path.join(mono_folder,'mono_'+filename), format="wav")
 
 #---Convert to mp3------
 # AudioSegment.from_wav(mono_filepath).export(mp3_filepath, format="mp3")
@@ -105,14 +110,14 @@ def get_model(features_shape):
 # X_train, y_train, X_test, y_test = read_features()
 
 # Extract features manually
-# x1, fs = sf.read(mono_filepath)
-# _,groundtruth_features = feature_extraction(x1,fs)
+x1, fs = sf.read(os.path.join(mono_folder,'mono_1_stereo_HQ.wav'))
+_,groundtruth_features = feature_extraction(x1,fs)
 
-# x2, fs = sf.read(input_filepath)
-# _ ,input_features = feature_extraction(x2,fs)
+x2, fs = sf.read(os.path.join(input_folder,'mono_1_stereo_LQ.wav'))
+_ ,input_features = feature_extraction(x2,fs)
 
-# X_train,X_test,y_train,y_test = train_test_split(input_features,groundtruth_features,test_size=0.2,random_state=0)
-# save_features(X_train,X_test,y_train,y_test)
+X_train,X_test,y_train,y_test = train_test_split(input_features,groundtruth_features,test_size=0.2,random_state=0)
+save_features(X_train,X_test,y_train,y_test)
 
 
 #%% ------ Fit model
@@ -129,21 +134,24 @@ def get_model(features_shape):
 
 #%% ----- PREDICT---------
 
-model = load_model('test-2019-04-17 16_59_54.h5')
+# model = load_model('test-2019-04-17 16_59_54.h5')
 
-y, fs = sf.read(os.getcwd() + '/data_monowavs/1.wav')
-phaseInfo,feat = feature_extraction(y,fs)
-yhat = model.predict(feat)
-#%% ------RECONSTRUCT THE AUDIO--------
+# y, fs = sf.read(os.getcwd() + '/data_monowavs/1.wav')
+# phaseInfo,feat = feature_extraction(y,fs)
+# yhat = model.predict(feat)
+# #%% ------RECONSTRUCT THE AUDIO--------
 
-# Restore to the original shape
-yrec = yhat.transpose((1,2,0,3))
-yrec = yrec.reshape((yrec.shape[0],-1), order='F')
-yrec = yrec + phaseInfo
-# yrec = np.vstack((yrec,np.flipud(yrec)))
-# Save output file
+# # Restore to the original shape
+# yrec = yhat.transpose((1,2,0,3))
+# yrec = yrec.reshape((yrec.shape[0],-1), order='F')
+# yrec = yrec + phaseInfo
+# # yrec = np.vstack((yrec,np.flipud(yrec)))
+# # Save output file
 
-_, xrec = signal.istft(yrec, fs)
-write(os.getcwd() + "/output/2_1.wav",fs,xrec)
-print('Output saved.')
+# _, xrec = signal.istft(yrec, fs)
+# write(os.getcwd() + "/output/2_1.wav",fs,xrec)
+# print('Output saved.')
+# %%
+# file_process(os.path.join(input_folder, '1_stereo_LQ.wav'))
+
 #%%
