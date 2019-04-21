@@ -121,16 +121,20 @@ save_features(X_train,X_test,y_train,y_test)
 
 
 #%% ------ Fit model
-# model = get_model(X_train.shape)
+model = get_model(y_train.shape)
 
-# checkpoint = ModelCheckpoint("SRCNN_check.h5", monitor='val_loss', verbose=1, save_best_only=True,
-#                                  save_weights_only=False, mode='min')
-# callbacks_list = [checkpoint]
-# model.fit(X_train, y_train, batch_size=32, validation_data=(X_test, y_test),
-                #    shuffle=True, epochs=100)
+model_filename = 'SRCNN_{date:%Y-%m-%d %H:%M:%S}_best.h5'.format( date=datetime.datetime.now())
+checkpoint = ModelCheckpoint(model_filename, monitor='val_loss', verbose=1, save_best_only=True,
+                                 save_weights_only=False, mode='min')
+callbacks_list = [checkpoint]
+model.fit(X_train, y_train, batch_size=16, validation_data=(X_test, y_test),
+                   shuffle=True, epochs=100, callbacks=callbacks_list)
+optimizer = 'adam'
+loss = 'mae'
+metrics = 'mae'
+n_layers = 3
 
-
-# model.save('test-{date:%Y-%m-%d %H:%M:%S}.txt'.format( date=datetime.datetime.now() ))
+model.save('test-{date:%Y-%m-%d %H:%M:%S}.h5'.format( date=datetime.datetime.now() ))
 
 #%% ----- PREDICT---------
 
