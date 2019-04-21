@@ -19,7 +19,7 @@ optimizer = 'adam'
 loss = 'mae'
 metrics = 'mae'
 n_layers = 3
-
+model_name = 'model-{}batch-{}epochs.h5'.format(batch_size,  nb_epoch)
 #%%
 def main():
     if not os.path.exists('myData.h5py'):
@@ -43,14 +43,15 @@ def main():
         X_train, y_train, X_test, y_test = read_features('myData.h5py')
     
     # get the model and train
-    model = get_model(y_train.shape)
-    model.fit(X_train, y_train, batch_size=batch_size, validation_data=(X_test, y_test), \
-              shuffle=True, epochs=nb_epoch)   
-    model.save('model-{}batch-{}epochs.h5'.format(batch_size,  nb_epoch))
+    if not os.path.exists(model_name):
+        model = get_model(y_train.shape)
+        model.fit(X_train, y_train, batch_size=batch_size, validation_data=(X_test, y_test), \
+                  shuffle=True, epochs=nb_epoch)
+        model.save(model_name)
     
     
     # predict and generate output files
-    model = load_model('model-16batch-1epochs.h5')
+    model = load_model(model_name)
     y, fs = sf.read(input_filename)
     phaseInfo, feat = feature_extraction(y,fs)
     yhat = model.predict(feat)
