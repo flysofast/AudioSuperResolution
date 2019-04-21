@@ -102,7 +102,27 @@ def get_model(features_shape):
 	model.summary()
 	return model
 
+def reconstruct(y,fs,model):    
+	phaseInfo,feat = feature_extraction(y,fs)
+	yhat = model.predict(feat)
+	
+	#------RECONSTRUCT THE AUDIO--------
+	# Restore to the original shape
+	yrec = yhat.transpose((1,2,0,3))
+	yrec = yrec.reshape((yrec.shape[0],-1), order='F')
+	# yrec = yrec + phaseInfo
+	# yrec = np.vstack((yrec,np.flipud(yrec)))
+	# Save output file
+	_, xrec = signal.istft(yrec, fs)
+	write("output.wav",fs,xrec)
+	print('Output without phase info was saved.')
 
+	yrec = yrec + phaseInfo
+	# yrec = np.vstack((yrec,np.flipud(yrec)))
+	# Save output file
+	_, xrec = signal.istft(yrec, fs)
+	write("output_with_phase.wav",fs,xrec)
+	print('Output with phase info was saved.')
 #-------- TEST----------
 #%% ------Get features------
 
@@ -118,7 +138,6 @@ _ ,input_features = feature_extraction(x2,fs)
 
 X_train,X_test,y_train,y_test = train_test_split(input_features,groundtruth_features,test_size=0.2,random_state=0)
 save_features(X_train,X_test,y_train,y_test)
-
 
 #%% ------ Fit model
 model = get_model(y_train.shape)
@@ -138,23 +157,10 @@ model.save('test-{date:%Y-%m-%d %H:%M:%S}.h5'.format( date=datetime.datetime.now
 
 #%% ----- PREDICT---------
 
-# model = load_model('test-2019-04-17 16_59_54.h5')
-
-# y, fs = sf.read(os.getcwd() + '/data_monowavs/1.wav')
-# phaseInfo,feat = feature_extraction(y,fs)
-# yhat = model.predict(feat)
-# #%% ------RECONSTRUCT THE AUDIO--------
-
-# # Restore to the original shape
-# yrec = yhat.transpose((1,2,0,3))
-# yrec = yrec.reshape((yrec.shape[0],-1), order='F')
-# yrec = yrec + phaseInfo
-# # yrec = np.vstack((yrec,np.flipud(yrec)))
-# # Save output file
-
-# _, xrec = signal.istft(yrec, fs)
-# write(os.getcwd() + "/output/2_1.wav",fs,xrec)
-# print('Output saved.')
+model = load_model('test-2019-04-17 16_59_54.h5')
+y, fs = sf.read(os.getcwd() + '/data_monowavs/1.wav')
+reconstruct(y,fs,model)
+# newmethod446()
 # %%
 # file_process(os.path.join(input_folder, '1_stereo_LQ.wav'))
 
