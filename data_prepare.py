@@ -64,3 +64,4 @@ def compress(input_dir, output_dir):
         os.remove("{0}.mp3".format(name))
 
     print("-----------Done Compressing---------------")
+    os.chdir('..')
