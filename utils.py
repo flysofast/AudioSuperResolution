@@ -4,6 +4,7 @@ import numpy as np
 import h5py
 import soundfile as sf
 import os 
+from scipy.io.wavfile import write
 
 #Feature extraction
 def feature_extraction(x,fs):
@@ -65,3 +66,26 @@ def read_features(features_filename):
             y_train = f.get('y_train').value
             y_test = f.get('y_test').value
     return X_train, y_train, X_test, y_test
+
+
+def reconstruct(y,fs,model):    
+	phaseInfo,feat = feature_extraction(y,fs)
+	yhat = model.predict(feat)
+	
+	#------RECONSTRUCT THE AUDIO--------
+	# Restore to the original shape
+	yrec = yhat.transpose((1,2,0,3))
+	yrec = yrec.reshape((yrec.shape[0],-1), order='F')
+	# yrec = yrec + phaseInfo
+	# yrec = np.vstack((yrec,np.flipud(yrec)))
+	# Save output file
+	_, xrec = signal.istft(yrec, fs)
+	write("output.wav",fs,xrec)
+	print('Output without phase info was saved.')
+
+	yrec = yrec * np.exp(1j*phaseInfo)
+	# yrec = np.vstack((yrec,np.flipud(yrec)))
+	# Save output file
+	_, xrec = signal.istft(yrec, fs)
+	write("output_with_phase.wav",fs,xrec)
+	print('Output with phase info was saved.')
