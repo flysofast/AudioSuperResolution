@@ -16,9 +16,7 @@ def stereo_to_mono(input_dir, output_dir):
     """
     if os.path.exists(output_dir):
         print("{} already exist".format(output_dir))
-        return
-
-    if not os.path.exists(output_dir):
+    else:
         os.makedirs(output_dir)
 
     for filename in os.listdir(input_dir):
@@ -41,9 +39,8 @@ def compress(input_dir, output_dir):
 
     if os.path.exists(output_dir):
         print("{} already exist".format(output_dir))
-        return
 
-    if not os.path.exists(output_dir):
+    else:
         os.makedirs(output_dir)
 
     # change cwd to input_dir and compress the files
