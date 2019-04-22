@@ -10,9 +10,9 @@ from scipy import signal
 from keras.callbacks import ModelCheckpoint
 import datetime
 #%% Parameters
-input_folder = os.path.join(os.getcwd(), 'data_input')
-mono_folder = os.path.join(os.getcwd(), 'data_mono')
-stereo_folder = os.path.join(os.getcwd(), 'data')
+input_folder = os.path.join(os.getcwd(), 'training_samples')
+groundtruth_folder = os.path.join(os.getcwd(), 'groundtruth')
+stereo_folder = os.path.join(os.getcwd(), 'rawdata')
 input_filename = os.path.join(input_folder, 'other.wav')
 batch_size =16
 nb_epoch = 100
@@ -25,11 +25,11 @@ n_layers = 3
 def main():
     if not os.path.exists('myData.h5py'):
         # prepare the data
-        stereo_to_mono(stereo_folder, mono_folder)
-        compress(mono_folder, input_folder)
+        stereo_to_mono(stereo_folder, groundtruth_folder)
+        compress(groundtruth_folder, input_folder)
 
         # extract features
-        gt_features, _ = get_features(mono_folder)
+        gt_features, _ = get_features(groundtruth_folder)
         input_features, _ = get_features(input_folder)
         X_train,X_test,y_train,y_test = \
             train_test_split(input_features, gt_features, test_size=0.2)
