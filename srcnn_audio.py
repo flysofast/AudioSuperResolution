@@ -21,6 +21,7 @@ import h5py
 from pydub import AudioSegment
 import os
 import datetime
+from scipy.io.wavfile import write
 
 stereo_filepath = os.getcwd() + '/data/1.wav'
 mono_filepath = os.getcwd() +"/data_monowavs/1.wav"
@@ -113,6 +114,27 @@ def get_model(features_shape):
 	model.compile(optimizer=adam, loss='mean_absolute_error', metrics=['mean_absolute_error'])
 	model.summary()
 	return model
+def reconstruct(y,fs,model):    
+	phaseInfo,feat = feature_extraction(y,fs)
+	yhat = model.predict(feat)
+	
+	#------RECONSTRUCT THE AUDIO--------
+	# Restore to the original shape
+	yrec = yhat.transpose((1,2,0,3))
+	yrec = yrec.reshape((yrec.shape[0],-1), order='F')
+	# yrec = yrec + phaseInfo
+	# yrec = np.vstack((yrec,np.flipud(yrec)))
+	# Save output file
+	_, xrec = signal.istft(yrec, fs)
+	write("output.wav",fs,xrec)
+	print('Output without phase info was saved.')
+
+	yrec = yrec + phaseInfo
+	# yrec = np.vstack((yrec,np.flipud(yrec)))
+	# Save output file
+	_, xrec = signal.istft(yrec, fs)
+	write("output_with_phase.wav",fs,xrec)
+	print('Output with phase info was saved.')
 
 """**Extract features**"""
 
@@ -130,14 +152,14 @@ X_train,X_test,y_train,y_test = train_test_split(input_features,groundtruth_feat
 save_features(X_train,X_test,y_train,y_test)
 
 """**Train the model:**"""
-
 model = get_model(y_train.shape)
 
-# checkpoint = ModelCheckpoint("SRCNN_check.h5", monitor='val_loss', verbose=1, save_best_only=True,
-#                                  save_weights_only=False, mode='min')
-# callbacks_list = [checkpoint]
+model_filename = 'SRCNN_{date:%Y-%m-%d %H:%M:%S}_best.h5'.format( date=datetime.datetime.now())
+checkpoint = ModelCheckpoint(model_filename, monitor='val_loss', verbose=1, save_best_only=True,
+                                 save_weights_only=False, mode='min')
+callbacks_list = [checkpoint]
 model.fit(X_train, y_train, batch_size=16, validation_data=(X_test, y_test),
-                   shuffle=True, epochs=100)
+                   shuffle=True, epochs=100, callbacks=callbacks_list)
 optimizer = 'adam'
 loss = 'mae'
 metrics = 'mae'
@@ -150,7 +172,7 @@ model.save('test-{date:%Y-%m-%d %H:%M:%S}.h5'.format( date=datetime.datetime.now
 ---
 """
 
-from scipy.io.wavfile import write
+
 #%% ----- PREDICT---------
 
 # model = load_model('mae_model.h5')
@@ -159,22 +181,8 @@ y, fs = sf.read(input_filename)
 phaseInfo,feat = feature_extraction(y,fs)
 yhat = model.predict(feat)
 #%% ------RECONSTRUCT THE AUDIO--------
-
-# Restore to the original shape
-yrec = yhat.transpose((1,2,0,3))
-yrec = yrec.reshape((yrec.shape[0],-1), order='F')
-# yrec = yrec + phaseInfo
-# yrec = np.vstack((yrec,np.flipud(yrec)))
-# Save output file
-_, xrec = signal.istft(yrec, fs)
-write("output.wav",fs,xrec)
-print('Output without phase saved.')
-
-yrec = yrec + phaseInfo
-# yrec = np.vstack((yrec,np.flipud(yrec)))
-# Save output file
-_, xrec = signal.istft(yrec, fs)
-write("output_with_phase.wav",fs,xrec)
-print('Output with phase saved.')
+model = load_model(model_filename)
+y, fs = sf.read(os.getcwd() + '/data_monowavs/1.wav')
+reconstruct(y,fs,model)
 #%%
 
