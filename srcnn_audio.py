@@ -129,7 +129,7 @@ def reconstruct(y,fs,model):
 	write("output.wav",fs,xrec)
 	print('Output without phase info was saved.')
 
-	yrec = yrec + phaseInfo
+	yrec = yrec * exp(1j*phaseInfo)
 	# yrec = np.vstack((yrec,np.flipud(yrec)))
 	# Save output file
 	_, xrec = signal.istft(yrec, fs)
@@ -172,17 +172,9 @@ model.save('test-{date:%Y-%m-%d %H:%M:%S}.h5'.format( date=datetime.datetime.now
 ---
 """
 
-
 #%% ----- PREDICT---------
-
-# model = load_model('mae_model.h5')
-
-y, fs = sf.read(input_filename)
-phaseInfo,feat = feature_extraction(y,fs)
-yhat = model.predict(feat)
-#%% ------RECONSTRUCT THE AUDIO--------
 model = load_model(model_filename)
-y, fs = sf.read(os.getcwd() + '/data_monowavs/1.wav')
+y, fs = sf.read(input_filename)
 reconstruct(y,fs,model)
 #%%
 
