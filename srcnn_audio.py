@@ -46,7 +46,7 @@ def feature_extraction(x,fs):
 	X = np.abs(X)
 
 	# Segmentation
-	sample_length_s = 0.8 # segment length in seconds
+	sample_length_s = 0.5 # segment length in seconds
 	sample_length = int(sample_length_s/frame_length_s) # ~1s in samples
 
 	# Trim the frames that can't be fitted into the segment size
@@ -129,7 +129,7 @@ def reconstruct(y,fs,model):
 	write("output.wav",fs,xrec)
 	print('Output without phase info was saved.')
 
-	yrec = yrec * exp(1j*phaseInfo)
+	yrec = yrec * np.exp(1j*phaseInfo)
 	# yrec = np.vstack((yrec,np.flipud(yrec)))
 	# Save output file
 	_, xrec = signal.istft(yrec, fs)
