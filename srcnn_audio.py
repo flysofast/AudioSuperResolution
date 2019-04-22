@@ -4,7 +4,6 @@
 
 **Function definitions:**
 """
-
 #%%
 import os
 import soundfile as sf
@@ -160,10 +159,6 @@ checkpoint = ModelCheckpoint(model_filename, monitor='val_loss', verbose=1, save
 callbacks_list = [checkpoint]
 model.fit(X_train, y_train, batch_size=16, validation_data=(X_test, y_test),
                    shuffle=True, epochs=100, callbacks=callbacks_list)
-optimizer = 'adam'
-loss = 'mae'
-metrics = 'mae'
-n_layers = 3
 
 model.save('test-{date:%Y-%m-%d %H:%M:%S}.h5'.format( date=datetime.datetime.now() ))
 

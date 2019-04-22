@@ -21,7 +21,7 @@ def feature_extraction(x,fs):
     X = np.abs(X)
 
     # Segmentation
-    sample_length_s = 0.8 # segment length in seconds
+    sample_length_s = 0.5 # segment length in seconds
     sample_length = int(sample_length_s/frame_length_s) # ~1s in samples
 
     # Trim the frames that can't be fitted into the segment size
