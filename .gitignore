@@ -3,3 +3,7 @@
 *.h5py
 *.pyc
 __pycache__/
+*.ipynb
+rawdata/
+groundtruth/
+training_samples/

@@ -28,10 +28,13 @@ def main():
         # extract features
         gt_features, _ = get_features(groundtruth_folder)
         input_features, _ = get_features(input_folder)
-        X_train,X_test,y_train,y_test = \
-            train_test_split(input_features, gt_features, test_size=0.2)
+        
+        # splitting
+        X_train, X_test, y_train, y_test = split(input_features, gt_features, 0.2)
         print("X_train shape: ", X_train.shape)
         print("X_test shape: ", X_test.shape)
+        print("y_train shape: ", y_train.shape)
+        print("y_test shape: ", y_test.shape)
     
         # save features
         save_features('myData.h5py', X_train, X_test, y_train, y_test)
