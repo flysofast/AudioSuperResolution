@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 import soundfile as sf
 from keras.models import load_model
 from scipy import signal
-from keras.callbacks import ModelCheckpoint
+from keras.callbacks import ModelCheckpoint,EarlyStopping
 import datetime
 #%% Parameters
 input_folder = os.path.join(os.getcwd(), 'training_samples')
@@ -39,16 +39,17 @@ def main():
     
     # get the model and train
     # if not os.path.exists(model_name):
-    # model = get_model(y_train.shape)
+    model = get_model(y_train.shape)
 
-    # model_filename = 'SRCNN_{date:%Y-%m-%d %H:%M:%S}_best.h5'.format( date=datetime.datetime.now())
-    # checkpoint = ModelCheckpoint(model_filename, monitor='val_loss', verbose=1, save_best_only=True,
-    #                                 save_weights_only=False, mode='min')
-    # callbacks_list = [checkpoint]
-    # model.fit(X_train, y_train, batch_size=16, validation_data=(X_test, y_test),
-                    # shuffle=True, epochs=100, callbacks=callbacks_list)
+    model_filename = 'SRCNN_{date:%Y-%m-%d %H:%M:%S}_best.h5'.format( date=datetime.datetime.now())
+    checkpoint = ModelCheckpoint(model_filename, monitor='val_loss', verbose=1, save_best_only=True,
+                                    save_weights_only=False, mode='min')
+    es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=20)
+    callbacks_list = [checkpoint,es]
+    model.fit(X_train, y_train, batch_size=16, validation_data=(X_test, y_test),
+                    shuffle=True, epochs=200, callbacks=callbacks_list)
 
-    # model.save('test-{date:%Y-%m-%d %H:%M:%S}.h5'.format( date=datetime.datetime.now() ))
+    model.save('test-{date:%Y-%m-%d %H:%M:%S}.h5'.format( date=datetime.datetime.now() ))
     
     
     # predict and generate output files
