@@ -18,17 +18,28 @@ def stereo_to_mono(input_dir, output_dir):
         print("{} already exist".format(output_dir))
     else:
         os.makedirs(output_dir)
+        
+    # count the number of audio files in input and output folder
+    _, _, input_files = next(os.walk(input_dir))
+    input_file_count = len(input_files)
+    _, _, output_files = next(os.walk(output_dir))
+    output_file_count = len(output_files)
+    
+    # if input and output folder have the same number of files, then 
+    # we skip the process (because the files are already converted)
+    if input_file_count != output_file_count:
+        for filename in os.listdir(input_dir):
+            if filename.endswith(".wav"):
+                # print(os.path.join(input_dir, filename))
+                sound = AudioSegment.from_wav(os.path.join(input_dir, filename))
+                if sound.channels != 1:
+                    sound = sound.set_channels(1)
+                name = filename.split(".")[0]
+                sound.export(os.path.join(output_dir, name) + ".wav", format="wav")
 
-    for filename in os.listdir(input_dir):
-        if filename.endswith(".wav"):
-            # print(os.path.join(input_dir, filename))
-            sound = AudioSegment.from_wav(os.path.join(input_dir, filename))
-            if sound.channels != 1:
-                sound = sound.set_channels(1)
-            name = filename.split(".")[0]
-            sound.export(os.path.join(output_dir, name) + ".wav", format="wav")
-
-    print("-----------Done converting Stereo to Mono---------------")
+        print("-----------Done converting Stereo to Mono---------------")
+    else:
+        print("-----------Already Convert------------------------------")
 
 #%%
 def compress(input_dir, output_dir):
@@ -42,23 +53,34 @@ def compress(input_dir, output_dir):
 
     else:
         os.makedirs(output_dir)
-
-    # change cwd to input_dir and compress the files
-    os.chdir(input_dir) 
-    for filename in os.listdir(os.path.join(os.getcwd(), input_dir)):
-        if (filename.endswith(".wav")):
-            name = filename.split(".")[0]
-            os.system("ffmpeg -i {0}.wav -ab 96000 {1}.mp3".format(name, name))
-            # move the files to output_dir
-            os.rename(os.path.join(input_dir, "{}.mp3".format(name)), \
-                        os.path.join(output_dir, "{}.mp3".format(name)))
     
-    # change cwd to output_dir to convert mp3s back to wavs the files
-    os.chdir(output_dir) 
-    for filename in os.listdir(os.path.join(os.getcwd(), input_dir)):
-        name = filename.split(".")[0]
-        os.system("ffmpeg -i {0}.mp3 {1}.wav".format(name, name))
-        os.remove("{0}.mp3".format(name))
+    # count the number of audio files in input and output folder
+    _, _, input_files = next(os.walk(input_dir))
+    input_file_count = len(input_files)
+    _, _, output_files = next(os.walk(output_dir))
+    output_file_count = len(output_files)
+    
+    # if input and output folder have the same number of files, then 
+    # we skip the process (because the files are already compressed)
+    if input_file_count != output_file_count:
+        # change cwd to input_dir and compress the files
+        os.chdir(input_dir) 
+        for filename in os.listdir(os.path.join(os.getcwd(), input_dir)):
+            if (filename.endswith(".wav")):
+                name = filename.split(".")[0]
+                os.system("ffmpeg -i {0}.wav -ab 96000 {1}.mp3".format(name, name))
+                # move the files to output_dir
+                os.rename(os.path.join(input_dir, "{}.mp3".format(name)), \
+                            os.path.join(output_dir, "{}.mp3".format(name)))
 
-    print("-----------Done Compressing---------------")
-    os.chdir('..')
+        # change cwd to output_dir to convert mp3s back to wavs the files
+        os.chdir(output_dir) 
+        for filename in os.listdir(os.path.join(os.getcwd(), input_dir)):
+            name = filename.split(".")[0]
+            os.system("ffmpeg -i {0}.mp3 {1}.wav".format(name, name))
+            os.remove("{0}.mp3".format(name))
+
+        print("-----------Done Compressing---------------")
+        os.chdir('..')
+    else:
+        print("-----------Already Compressed---------------")
