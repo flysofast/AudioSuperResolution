@@ -1,5 +1,5 @@
 #%%
-from utils import save_features, get_features, read_features, feature_extraction, reconstruct
+from utils import save_features, get_features, read_features, feature_extraction, reconstruct, split
 from model import get_model
 from data_prepare import stereo_to_mono, compress
 import os
