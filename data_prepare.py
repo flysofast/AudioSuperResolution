@@ -19,11 +19,14 @@ def stereo_to_mono(input_dir, output_dir):
     else:
         os.makedirs(output_dir)
         
+    # count the number of audio files in input and output folder
     _, _, input_files = next(os.walk(input_dir))
     input_file_count = len(input_files)
     _, _, output_files = next(os.walk(output_dir))
     output_file_count = len(output_files)
     
+    # if input and output folder have the same number of files, then 
+    # we skip the process (because the files are already converted)
     if input_file_count != output_file_count:
         for filename in os.listdir(input_dir):
             if filename.endswith(".wav"):
@@ -36,7 +39,7 @@ def stereo_to_mono(input_dir, output_dir):
 
         print("-----------Done converting Stereo to Mono---------------")
     else:
-        print("-----------Already convert------------------------------")
+        print("-----------Already Convert------------------------------")
 
 #%%
 def compress(input_dir, output_dir):
@@ -51,11 +54,14 @@ def compress(input_dir, output_dir):
     else:
         os.makedirs(output_dir)
     
+    # count the number of audio files in input and output folder
     _, _, input_files = next(os.walk(input_dir))
     input_file_count = len(input_files)
     _, _, output_files = next(os.walk(output_dir))
     output_file_count = len(output_files)
     
+    # if input and output folder have the same number of files, then 
+    # we skip the process (because the files are already compressed)
     if input_file_count != output_file_count:
         # change cwd to input_dir and compress the files
         os.chdir(input_dir) 

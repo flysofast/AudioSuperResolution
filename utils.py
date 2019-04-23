@@ -49,9 +49,11 @@ def get_features(dir_name):
     return features, trimmed_phases
 
 
-# test_proportion of 3 means 1/3 so 33% test and 67% train
+
 def split(matrix, target, test_proportion):
-    ratio = int(matrix.shape[0]*test_proportion) #should be int
+    # use this function because keras's train_test_split causes memory error
+    # when the data gets large
+    ratio = int(matrix.shape[0]*test_proportion)
     X_train = matrix[ratio:,:]
     X_test =  matrix[:ratio,:]
     Y_train = target[ratio:,:]
