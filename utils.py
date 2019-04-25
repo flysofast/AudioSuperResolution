@@ -48,7 +48,10 @@ def get_features(dir_name):
     features = np.vstack(features)
     return features, trimmed_phases
 
-
+def unison_shuffled_copies(a, b):
+    assert len(a) == len(b)
+    p = np.random.permutation(len(a))
+    return a[p], b[p]
 
 def split(matrix, target, test_proportion):
     # use this function because keras's train_test_split causes memory error
@@ -104,3 +107,5 @@ def reconstruct(y,fs,model):
 	_, xrec = signal.istft(yrec, fs)
 	write("output_with_phase.wav",fs,xrec)
 	print('Output with phase info was saved.')
+    
+    

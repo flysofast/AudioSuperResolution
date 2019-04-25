@@ -68,7 +68,7 @@ def compress(input_dir, output_dir):
         for filename in os.listdir(os.path.join(os.getcwd(), input_dir)):
             if (filename.endswith(".wav")):
                 name = filename.split(".")[0]
-                os.system("ffmpeg -i {0}.wav -ab 96000 {1}.mp3".format(name, name))
+                os.system("ffmpeg -i {0}.wav -ab 32000 {1}.mp3".format(name, name))
                 # move the files to output_dir
                 os.rename(os.path.join(input_dir, "{}.mp3".format(name)), \
                             os.path.join(output_dir, "{}.mp3".format(name)))
