@@ -2,9 +2,9 @@
 from scipy import signal
 import numpy as np
 import h5py
-import soundfile as sf
 import os 
 from scipy.io.wavfile import write
+import matplotlib.pyplot as plt
 
 #Feature extraction
 def feature_extraction(x,fs):
@@ -107,5 +107,24 @@ def reconstruct(y,fs,model):
 	_, xrec = signal.istft(yrec, fs)
 	write("output_with_phase.wav",fs,xrec)
 	print('Output with phase info was saved.')
-    
+
+def plotSpectrogram(y,fs):
+    frame_length_s = 0.04 # window length in seconds
+    frame_length = int(fs*frame_length_s) # 40ms window length in samples
+    # set an overlap ratio of 50 %
+    hop_length = frame_length//2
+    _,_,X = signal.stft(y, noverlap=hop_length, fs=fs,nperseg=frame_length)
+    # duration = X.shape/float(fs)
+    freq_scale = np.linspace(0, fs / 2, X.shape[0])
+    timeframe_scale = np.arange(0, X.shape[1])
+    # plot spectrogram (amplitude only)
+    W = np.abs(X)
+    plt.figure()
+    # plt.subplot(2,1,1)
+    plt.pcolormesh(timeframe_scale, freq_scale, np.log(W+0.00001))
+    plt.xlabel('Time (sample)')
+    plt.ylabel('Frequency (Hz)')
+    plt.title('Entire file Spectrogram (log scale)')
+    # plt.tight_layout()
+    plt.show()
     
