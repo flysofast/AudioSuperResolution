@@ -5,7 +5,7 @@ import h5py
 import os 
 from scipy.io.wavfile import write
 import matplotlib.pyplot as plt
-
+import soundfile as sf
 #Feature extraction
 def feature_extraction(x,fs):
     frame_length_s = 0.04 # window length in seconds
@@ -87,26 +87,26 @@ def read_features(features_filename):
 
 
 def reconstruct(y,fs,model):    
-	phaseInfo,feat = feature_extraction(y,fs)
-	yhat = model.predict(feat)
-	
-	#------RECONSTRUCT THE AUDIO--------
-	# Restore to the original shape
-	yrec = yhat.transpose((1,2,0,3))
-	yrec = yrec.reshape((yrec.shape[0],-1), order='F')
-	# yrec = yrec + phaseInfo
-	# yrec = np.vstack((yrec,np.flipud(yrec)))
-	# Save output file
-	_, xrec = signal.istft(yrec, fs)
-	write("output.wav",fs,xrec)
-	print('Output without phase info was saved.')
+    phaseInfo,feat = feature_extraction(y,fs)
+    yhat = model.predict(feat)
 
-	yrec = yrec * np.exp(1j*phaseInfo)
-	# yrec = np.vstack((yrec,np.flipud(yrec)))
-	# Save output file
-	_, xrec = signal.istft(yrec, fs)
-	write("output_with_phase.wav",fs,xrec)
-	print('Output with phase info was saved.')
+    #------RECONSTRUCT THE AUDIO--------
+    # Restore to the original shape
+    yrec = yhat.transpose((1,2,0,3))
+    yrec = yrec.reshape((yrec.shape[0],-1), order='F')
+    # yrec = yrec + phaseInfo
+    # yrec = np.vstack((yrec,np.flipud(yrec)))
+    # Save output file
+    _, xrec = signal.istft(yrec, fs)
+    sf.write("output_without_phase.wav",xrec,fs, 'PCM_16')
+    print('Output without phase info was saved.')
+
+    yrec = yrec * np.exp(1j*phaseInfo)
+    # yrec = np.vstack((yrec,np.flipud(yrec)))
+    # Save output file
+    _, xrec = signal.istft(yrec, fs)
+    sf.write("output_with_phase.wav",xrec,fs, 'PCM_16')
+    print('Output with phase info was saved.')
 
 def plotSpectrogram(y,fs):
     frame_length_s = 0.04 # window length in seconds
