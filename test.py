@@ -26,12 +26,12 @@ import numpy as np
 # PREPARE DATA
 #stereo_to_mono('rawdata','groundtruth')
 #compress('groundtruth','training_samples')
-test_data,test_fs = sf.read('training_samples/bass.wav')
-orig_data,orig_fs = sf.read('groundtruth/bass.wav')
+test_data,test_fs = sf.read('training_samples/Triviul-Dorothy.wav')
+orig_data,orig_fs = sf.read('groundtruth/Triviul-Dorothy.wav')
 
 #%%
 # LOAD MODEL
-model = load_model('SRCNN_2019-05-01 14_42_26_best.h5')
+model = load_model('SRCNN_2019-05-03 22_09_28_bestMix.h5')
 
 #%%
 # Reconstruct
@@ -49,11 +49,11 @@ plt.title('Spectrogram of original high-quality data')
 plt.xlabel('Time (s)')
 plt.ylabel('Freq (Hz)')
 
-# Plot spectrogram of test data (downsampled)
+# Plot spectrogram of test data (compressed)
 plt.figure(1)
 test_f, test_t, test_spec = scipy.signal.stft(test_data,test_fs)
 plt.pcolormesh(test_t, test_f, 20 * np.log10(np.abs(test_spec) + 0.0001))
-plt.title('Spectrogram of test data (downsampled)')
+plt.title('Spectrogram of test data (compressed)')
 plt.xlabel('Time (s)')
 plt.ylabel('Freq (Hz)')
 
